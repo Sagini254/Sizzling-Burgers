@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      table {
+        width: 90%;
+        margin: 2rem auto;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 12px;
+        border: 1px solid #ddd;
+        text-align: center;
+      }
+
+      button {
+        padding: 0.3rem 0.6rem;
+        margin: 0.2rem;
+        cursor: pointer;
+      }
+
+      .checkout-form {
+        text-align: center;
+        margin-top: 2rem;
+      }
+
+      .checkout-form input {
+        padding: 0.7rem;
+        margin: 0.5rem;
+        width: 250px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 style="text-align: center">🛒 Your Cart</h1>
+
+    <!-- ✅ Checkout Form -->
+    <section class="checkout-form">
+      <h3>Enter Your Details to Checkout</h3>
+      <input type="text" id="customerName" placeholder="Your Name" required />
+      <input
+        type="tel"
+        id="customerPhone"
+        placeholder="Phone Number"
+        required
+      />
+    </section>
+
+    <!-- ✅ Cart Container -->
+    <section
+      class="cart"
+      id="cart-container"
+      style="text-align: center"
+    ></section>
+
+    <script>
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      const cartContainer = document.getElementById("cart-container");
+
+      function renderCart() {
+        if (cart.length === 0) {
+          cartContainer.innerHTML = "<p>Your cart is empty.</p>";
+          return;
+        }
+
+        let html = `
+      <table>
+        <tr>
+          <th>Burger</th>
+          <th>Price</th>
+          <th>Qty</th>
+          <th>Total</th>
+          <th>Actions</th>
+        </tr>
+      `;
+
+        let grandTotal = 0;
+
+        cart.forEach((item, index) => {
+          const itemTotal = item.price * item.quantity;
+          grandTotal += itemTotal;
+
+          html += `
+        <tr>
+          <td>${item.name}</td>
+          <td>$${item.price.toFixed(2)}</td>
+          <td>${item.quantity}</td>
+          <td>$${itemTotal.toFixed(2)}</td>
+          <td>
+            <button onclick="changeQuantity(${index}, 1)">+</button>
+            <button onclick="changeQuantity(${index}, -1)">-</button>
+            <button onclick="removeItem(${index})">Remove</button>
+          </td>
+        </tr>
+        `;
+        });
+
+        html += `
+        <tr>
+          <td colspan="3"><strong>Total:</strong></td>
+          <td colspan="2"><strong>$${grandTotal.toFixed(2)}</strong></td>
+        </tr>
+      </table>
+      `;
+
+        html += `
+        <div style="margin-top: 2rem">
+          <button onclick="checkout()">✅ Checkout & Download Receipt</button>
+          <button onclick="clearCart()" style="background-color: #555; color: white;">🗑️ Clear Cart</button>
+        </div>
+      `;
+
+        cartContainer.innerHTML = html;
+      }
+
+      function changeQuantity(index, delta) {
+        cart[index].quantity += delta;
+        if (cart[index].quantity <= 0) {
+          cart.splice(index, 1);
+        }
+        localStorage.setItem("cart", JSON.stringify(cart));
+        renderCart();
+      }
+
+      function removeItem(index) {
+        cart.splice(index, 1);
+        localStorage.setItem("cart", JSON.stringify(cart));
+        renderCart();
+      }
+
+      function checkout() {
+        const name = document.getElementById("customerName").value.trim();
+        const phone = document.getElementById("customerPhone").value.trim();
+
+        if (!name || !phone) {
+          alert("Please enter your name and phone number.");
+          return;
+        }
+
+        if (cart.length === 0) {
+          alert("Your cart is empty.");
+          return;
+        }
+
+        let summary = "🧾 Sizzling Burgers Order Receipt\n";
+        summary += `Customer: ${name}\nPhone: ${phone}\nDate: ${new Date().toLocaleString()}\n\n`;
+
+        let total = 0;
+
+        cart.forEach((item) => {
+          const itemTotal = item.price * item.quantity;
+          summary += `${item.name} x${item.quantity} - $${itemTotal.toFixed(
+            2
+          )}\n`;
+          total += itemTotal;
+        });
+
+        summary += `\nTotal: $${total.toFixed(2)}\n`;
+        summary += `\nThank you for your order, ${name}! 🍔`;
+
+        const blob = new Blob([summary], { type: "text/plain" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `receipt_${Date.now()}.txt`;
+        link.click();
+
+        cart = [];
+        localStorage.removeItem("cart");
+        renderCart();
+
+        document.getElementById("customerName").value = "";
+        document.getElementById("customerPhone").value = "";
+      }
+
+      function clearCart() {
+        if (confirm("Clear all items from cart?")) {
+          cart = [];
+          localStorage.removeItem("cart");
+          renderCart();
+        }
+      }
+
+      renderCart();
+    </script>
+  </body>
+</html>

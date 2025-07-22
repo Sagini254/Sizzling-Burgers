@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Burger Menu</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Burger Menu</h1>
+      <a href="cart.html" style="color: white; float: right; margin-right: 20px"
+        >🛒 Cart</a
+      >
+    </header>
+
+    <section class="menu">
+      <div class="menu-item">
+        <h2>Classic Beef Burger</h2>
+        <p>$6.99</p>
+        <button onclick="addToCart('Classic Beef Burger', 6.99)">
+          Add to Cart
+        </button>
+      </div>
+      <div class="menu-item">
+        <h2>Cheese Explosion</h2>
+        <p>$7.49</p>
+        <button onclick="addToCart('Cheese Explosion', 7.49)">
+          Add to Cart
+        </button>
+      </div>
+      <div class="menu-item">
+        <h2>Chicken Delight</h2>
+        <p>$6.49</p>
+        <button onclick="addToCart('Chicken Delight', 6.49)">
+          Add to Cart
+        </button>
+      </div>
+      <div class="menu-item">
+        <h2>Vegan Supreme</h2>
+        <p>$7.99</p>
+        <button onclick="addToCart('Vegan Supreme', 7.99)">Add to Cart</button>
+      </div>
+    </section>
+
+    <script>
+      function addToCart(name, price) {
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+        const index = cart.findIndex((item) => item.name === name);
+
+        if (index !== -1) {
+          cart[index].quantity += 1;
+        } else {
+          cart.push({ name, price, quantity: 1 });
+        }
+
+        localStorage.setItem("cart", JSON.stringify(cart));
+        alert(`${name} added to cart!`);
+      }
+    </script>
+  </body>
+</html>
+
+<!-- Link cart.js -->
+<script src="js/cart.js"></script>

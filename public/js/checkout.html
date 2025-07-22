@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout - Sizzling Burgers</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 1rem;
+        max-width: 600px;
+        margin: auto;
+        background: #f9f9f9;
+      }
+
+      h2 {
+        text-align: center;
+      }
+
+      .form-group {
+        margin-bottom: 1rem;
+      }
+
+      label {
+        display: block;
+        font-weight: bold;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 0.5rem;
+        margin-top: 0.3rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+
+      #order-summary,
+      #receipt {
+        background: #fff;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        margin-top: 1.5rem;
+        border-radius: 5px;
+      }
+
+      button {
+        width: 100%;
+        padding: 1rem;
+        background-color: #d62828;
+        color: white;
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 1.5rem;
+      }
+
+      button:hover {
+        background-color: #a71d1d;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>🍔 Checkout</h2>
+
+    <form id="checkoutForm">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" required />
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input type="tel" id="phone" required />
+      </div>
+
+      <div class="form-group">
+        <label for="address">Delivery Address</label>
+        <textarea id="address" rows="3" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="payment">Payment Method</label>
+        <select id="payment" required>
+          <option value="">Select a payment method</option>
+          <option value="mpesa">M-Pesa</option>
+          <option value="cash">Cash on Delivery</option>
+          <option value="card">Card Payment</option>
+        </select>
+      </div>
+
+      <div id="order-summary">
+        <h3>🧾 Order Summary</h3>
+        <div id="summary-content">Loading...</div>
+      </div>
+
+      <button type="submit">✅ Confirm & Place Order</button>
+    </form>
+
+    <!-- Receipt Section (Hidden by default) -->
+    <div id="receipt" style="display: none">
+      <h3>🧾 Receipt</h3>
+      <p><strong>Name:</strong> <span id="r-name"></span></p>
+      <p><strong>Phone:</strong> <span id="r-phone"></span></p>
+      <p><strong>Address:</strong> <span id="r-address"></span></p>
+      <p><strong>Payment:</strong> <span id="r-payment"></span></p>
+      <p><strong>Date:</strong> <span id="r-date"></span></p>
+      <div id="r-items" style="margin-top: 1rem"></div>
+      <p><strong>Total:</strong> $<span id="r-total"></span></p>
+      <button onclick="window.print()">🖨️ Print Receipt</button>
+    </div>
+
+    <script>
+      let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+      function renderOrderSummary() {
+        const container = document.getElementById("summary-content");
+
+        if (cart.length === 0) {
+          container.innerHTML = "<p>Your cart is empty.</p>";
+          return;
+        }
+
+        let total = 0;
+        let html = "<ul>";
+        cart.forEach((item) => {
+          const itemTotal = item.price * item.quantity;
+          total += itemTotal;
+          html += `<li>${item.name} x${item.quantity} - $${itemTotal.toFixed(
+            2
+          )}</li>`;
+        });
+        html += `</ul><strong>Total: $${total.toFixed(2)}</strong>`;
+        container.innerHTML = html;
+      }
+
+      document
+        .getElementById("checkoutForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const name = document.getElementById("name").value.trim();
+          const phone = document.getElementById("phone").value.trim();
+          const address = document.getElementById("address").value.trim();
+          const payment = document.getElementById("payment").value;
+
+          if (!name || !phone || !address || !payment) {
+            alert("Please fill out all fields.");
+            return;
+          }
+
+          const total_price = cart.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+          );
+
+          const order = {
+            customer: { name, phone, address },
+            payment,
+            items: cart,
+            total_price,
+          };
+
+          try {
+            const res = await fetch("http://localhost:3000/api/orders", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                user_id: 1,
+                items: order.items,
+                total_price: order.total_price,
+              }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+              // Fill receipt
+              document.getElementById("r-name").textContent = name;
+              document.getElementById("r-phone").textContent = phone;
+              document.getElementById("r-address").textContent = address;
+              document.getElementById("r-payment").textContent = payment;
+              document.getElementById("r-date").textContent =
+                new Date().toLocaleString();
+
+              let total = 0;
+              let itemsHTML = "<ul>";
+              cart.forEach((item) => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                itemsHTML += `<li>${item.name} x${
+                  item.quantity
+                } - $${itemTotal.toFixed(2)}</li>`;
+              });
+              itemsHTML += "</ul>";
+              document.getElementById("r-items").innerHTML = itemsHTML;
+              document.getElementById("r-total").textContent = total.toFixed(2);
+
+              // Show receipt, hide form
+              document.getElementById("checkoutForm").style.display = "none";
+              document.getElementById("receipt").style.display = "block";
+
+              // Clear cart
+              localStorage.removeItem("cart");
+              cart = [];
+            } else {
+              alert("❌ Failed to place order: " + data.error);
+            }
+          } catch (err) {
+            console.error(err);
+            alert("❌ Network error. Please try again.");
+          }
+        });
+
+      renderOrderSummary();
+    </script>
+  </body>
+</html>
+
+<!-- Link cart.js -->
+<script src="js/cart.js"></script>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Email Notifications - Sizzling Burgers Admin</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+        color: white;
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 20px;
+        background: rgba(255, 140, 0, 0.1);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 140, 0, 0.3);
+      }
+
+      .header h1 {
+        color: #ff8c00;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 25px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+      }
+
+      .card h3 {
+        color: #ff8c00;
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+      }
+
+      .status-indicator {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+
+      .status-connected {
+        background-color: #00ff88;
+      }
+
+      .status-disconnected {
+        background-color: #ff4444;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #ff8c00, #ff6b00);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin: 5px;
+        transition: all 0.3s ease;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(255, 140, 0, 0.4);
+      }
+
+      .btn:disabled {
+        background: #666;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .input-group {
+        margin-bottom: 15px;
+      }
+
+      .input-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #ff8c00;
+      }
+
+      .input-group input,
+      .input-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 1rem;
+      }
+
+      .input-group input::placeholder,
+      .input-group textarea::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .notification-history {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        border-radius: 15px;
+        margin-top: 20px;
+      }
+
+      .notification-item {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        margin-bottom: 10px;
+        border-radius: 8px;
+        border-left: 4px solid #ff8c00;
+      }
+
+      .notification-item .time {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+      }
+
+      .alert {
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 8px;
+        display: none;
+      }
+
+      .alert-success {
+        background: rgba(0, 255, 136, 0.2);
+        border: 1px solid #00ff88;
+        color: #00ff88;
+      }
+
+      .alert-error {
+        background: rgba(255, 68, 68, 0.2);
+        border: 1px solid #ff4444;
+        color: #ff4444;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+      }
+
+      .spinner {
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top: 3px solid #ff8c00;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🍔 Email Notifications Dashboard</h1>
+        <p>Manage email notifications for Sizzling Burgers</p>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- Email Service Status -->
+        <div class="card">
+          <h3>📧 Email Service Status</h3>
+          <div id="emailStatus">
+            <div class="loading">
+              <div class="spinner"></div>
+              <p>Checking connection...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Test Email -->
+        <div class="card">
+          <h3>🧪 Test Email</h3>
+          <div class="input-group">
+            <label for="testEmail">Test Email Address:</label>
+            <input
+              type="email"
+              id="testEmail"
+              placeholder="test@example.com"
+              required
+            />
+          </div>
+          <div class="input-group">
+            <label for="testName">Customer Name:</label>
+            <input type="text" id="testName" placeholder="Test Customer" />
+          </div>
+          <button class="btn" onclick="sendTestEmail()">Send Test Email</button>
+        </div>
+
+        <!-- Promotional Campaign -->
+        <div class="card">
+          <h3>📢 Send Promotional Campaign</h3>
+          <div class="input-group">
+            <label for="campaignTitle">Campaign Title:</label>
+            <input
+              type="text"
+              id="campaignTitle"
+              placeholder="Summer Special Offer"
+            />
+          </div>
+          <div class="input-group">
+            <label for="campaignDescription">Description:</label>
+            <textarea
+              id="campaignDescription"
+              rows="3"
+              placeholder="Get 20% off on all burgers this summer!"
+            ></textarea>
+          </div>
+          <div class="input-group">
+            <label for="campaignDiscount">Discount (%):</label>
+            <input
+              type="number"
+              id="campaignDiscount"
+              placeholder="20"
+              min="0"
+              max="100"
+            />
+          </div>
+          <div class="input-group">
+            <label for="campaignCode">Promo Code:</label>
+            <input type="text" id="campaignCode" placeholder="SUMMER20" />
+          </div>
+          <div class="input-group">
+            <label for="campaignValidUntil">Valid Until:</label>
+            <input type="date" id="campaignValidUntil" />
+          </div>
+          <button class="btn" onclick="sendCampaign()">Send Campaign</button>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div id="successAlert" class="alert alert-success"></div>
+      <div id="errorAlert" class="alert alert-error"></div>
+
+      <!-- Notification History -->
+      <div class="notification-history">
+        <h3>📋 Recent Notifications</h3>
+        <div id="notificationHistory">
+          <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading notifications...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
+    <script>
+      // Initialize Socket.IO connection
+      const socket = io();
+
+      // Show alert messages
+      function showAlert(message, type = "success") {
+        const alertId = type === "success" ? "successAlert" : "errorAlert";
+        const alertElement = document.getElementById(alertId);
+        alertElement.textContent = message;
+        alertElement.style.display = "block";
+
+        setTimeout(() => {
+          alertElement.style.display = "none";
+        }, 5000);
+      }
+
+      // Check email service status
+      async function checkEmailStatus() {
+        try {
+          const response = await fetch("/api/email/settings");
+          const data = await response.json();
+
+          const statusDiv = document.getElementById("emailStatus");
+          const statusClass = data.connected
+            ? "status-connected"
+            : "status-disconnected";
+          const statusText = data.connected ? "Connected" : "Disconnected";
+
+          statusDiv.innerHTML = `
+                    <div>
+                        <span class="status-indicator ${statusClass}"></span>
+                        <strong>Status:</strong> ${statusText}
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>Email User:</strong> ${
+                          data.emailUser || "Not configured"
+                        }
+                    </div>
+                    <div>
+                        <strong>Admin Email:</strong> ${
+                          data.adminEmail || "Not configured"
+                        }
+                    </div>
+                `;
+        } catch (error) {
+          console.error("Error checking email status:", error);
+          document.getElementById("emailStatus").innerHTML = `
+                    <div>
+                        <span class="status-indicator status-disconnected"></span>
+                        <strong>Status:</strong> Error
+                    </div>
+                `;
+        }
+      }
+
+      // Send test email
+      async function sendTestEmail() {
+        const email = document.getElementById("testEmail").value;
+        const name = document.getElementById("testName").value;
+
+        if (!email) {
+          showAlert("Please enter an email address", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/notifications/test", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, name }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            showAlert("Test email sent successfully!");
+            document.getElementById("testEmail").value = "";
+            document.getElementById("testName").value = "";
+            loadNotificationHistory();
+          } else {
+            showAlert(result.error || "Failed to send test email", "error");
+          }
+        } catch (error) {
+          console.error("Error sending test email:", error);
+          showAlert("Network error occurred", "error");
+        }
+      }
+
+      // Send promotional campaign
+      async function sendCampaign() {
+        const title = document.getElementById("campaignTitle").value;
+        const description = document.getElementById(
+          "campaignDescription"
+        ).value;
+        const discount = document.getElementById("campaignDiscount").value;
+        const promoCode = document.getElementById("campaignCode").value;
+        const validUntil = document.getElementById("campaignValidUntil").value;
+
+        if (!title || !description || !discount) {
+          showAlert("Please fill in all required fields", "error");
+          return;
+        }
+
+        try {
+          const response = await fetch("/api/notifications/campaign", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              title,
+              description,
+              discount: parseInt(discount),
+              promoCode,
+              validUntil,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (response.ok) {
+            showAlert(`Campaign sent to ${result.totalSent} customers!`);
+            // Clear form
+            document.getElementById("campaignTitle").value = "";
+            document.getElementById("campaignDescription").value = "";
+            document.getElementById("campaignDiscount").value = "";
+            document.getElementById("campaignCode").value = "";
+            document.getElementById("campaignValidUntil").value = "";
+            loadNotificationHistory();
+          } else {
+            showAlert(result.error || "Failed to send campaign", "error");
+          }
+        } catch (error) {
+          console.error("Error sending campaign:", error);
+          showAlert("Network error occurred", "error");
+        }
+      }
+
+      // Load notification history
+      async function loadNotificationHistory() {
+        try {
+          const response = await fetch("/api/notifications/history?limit=20");
+          const result = await response.json();
+
+          const historyDiv = document.getElementById("notificationHistory");
+
+          if (result.success && result.notifications.length > 0) {
+            historyDiv.innerHTML = result.notifications
+              .map(
+                (notification) => `
+                        <div class="notification-item">
+                            <div><strong>${notification.type
+                              .replace("_", " ")
+                              .toUpperCase()}</strong></div>
+                            <div>${notification.message}</div>
+                            ${
+                              notification.order_id
+                                ? `<div><small>Order: ${notification.order_id}</small></div>`
+                                : ""
+                            }
+                            <div class="time">${new Date(
+                              notification.created_at
+                            ).toLocaleString()}</div>
+                        </div>
+                    `
+              )
+              .join("");
+          } else {
+            historyDiv.innerHTML = "<p>No notifications found.</p>";
+          }
+        } catch (error) {
+          console.error("Error loading notification history:", error);
+          document.getElementById("notificationHistory").innerHTML =
+            "<p>Error loading notifications.</p>";
+        }
+      }
+
+      // Socket.IO event listeners
+      socket.on("newOrderAlert", (data) => {
+        showAlert(
+          `New order received: #${data.orderId} from ${data.customerName}`
+        );
+        loadNotificationHistory();
+      });
+
+      socket.on("orderStatusUpdate", (data) => {
+        showAlert(`Order #${data.orderId} status updated to: ${data.status}`);
+        loadNotificationHistory();
+      });
+
+      // Initialize page
+      document.addEventListener("DOMContentLoaded", () => {
+        checkEmailStatus();
+        loadNotificationHistory();
+
+        // Set default date for campaign (30 days from now)
+        const defaultDate = new Date();
+        defaultDate.setDate(defaultDate.getDate() + 30);
+        document.getElementById("campaignValidUntil").value = defaultDate
+          .toISOString()
+          .split("T")[0];
+      });
+    </script>
+  </body>
+</html>

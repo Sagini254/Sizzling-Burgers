@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sizzling Burgers</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+      integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+  </head>
+
+  <body>
+    <header>
+      <div id="stars"></div>
+      <div class="navbar">
+        <img src="images/logo.png" alt="Sizzling Burgers Logo" />
+        <div class="center-nav">
+          <a href="">Home</a>
+          <a href="">Menu</a>
+          <a href="">About</a>
+          <a href="">Shop</a>
+        </div>
+        <div class="social">
+          <a href=""><i class="fa-solid fa-magnifying-glass"></i></a>
+          <a href=""><i class="fa-solid fa-cart-plus"></i></a>
+          <a href=""><i class="fa-solid fa-house"></i></a>
+        </div>
+      </div>
+
+      <div class="text">
+        <h1>
+          THE ULTIMATE <br />
+          SIZZLING BURGERS
+        </h1>
+        <p>
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
+          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
+          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
+          aliquip ex ea commodo consequat. Duis aute irure dolor in
+          reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
+          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
+          culpa qui officia deserunt mollit anim id est laborum.
+        </p>
+        <a href="" class="btn">Order Now</a>
+        <a href="" class="btn">View More</a>
+      </div>
+      <div class="burger">
+        <img src="images/burger.png" alt="Classic Burger" />
+        <img src="images/ongwing.com (12).png" alt="Burger Side View" />
+        <img src="images/burger2.png" alt="Burger Variation" />
+        <img
+          src="images/Flying Burger PNG Image - 2084x2084.png"
+          alt="Flying Burger"
+        />
+        <img src="images/pngwing.com (16).png" alt="Burger Graphic" />
+      </div>
+      <div class="burger-toggle">
+        <img
+          src="images/Flying Burger PNG Image - 2084x2084.png"
+          alt=""
+          class="active"
+        />
+      </div>
+    </header>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
+    <script>
+      document
+        .getElementById("checkoutForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const name = document.getElementById("name").value.trim();
+          const phone = document.getElementById("phone").value.trim();
+          const address = document.getElementById("address").value.trim();
+          const payment = document.getElementById("payment").value;
+
+          if (!name || !phone || !address || !payment) {
+            alert("Please fill out all fields.");
+            return;
+          }
+
+          const order = {
+            customer: { name, phone, address },
+            payment,
+            cart,
+            date: new Date().toLocaleString(),
+          };
+
+          // Simulate order ID generation
+          const orderId = Math.floor(Math.random() * 1000000);
+
+          // Fill receipt section
+          document.getElementById("r-name").textContent = name;
+          document.getElementById("r-phone").textContent = phone;
+          document.getElementById("r-address").textContent = address;
+          document.getElementById("r-payment").textContent = payment;
+          document.getElementById("r-date").textContent = order.date;
+
+          let total = 0;
+          let itemsHTML = "<ul>";
+          cart.forEach((item) => {
+            const itemTotal = item.price * item.quantity;
+            total += itemTotal;
+            itemsHTML += `<li>${item.name} x${
+              item.quantity
+            } - $${itemTotal.toFixed(2)}</li>`;
+          });
+          itemsHTML += "</ul>";
+          document.getElementById("r-items").innerHTML = itemsHTML;
+          document.getElementById("r-total").textContent = total.toFixed(2);
+
+          // Show receipt, hide form
+          document.getElementById("checkoutForm").style.display = "none";
+          document.getElementById("receipt").style.display = "block";
+
+          // Clear cart
+          localStorage.removeItem("cart");
+          cart = [];
+
+          console.log("Order placed:", order);
+        });
+
+      const burgerImages = document.querySelectorAll(".burger img");
+      const toggleImages = document.querySelectorAll(".burger-toggle img");
+      let currentIndex = 0;
+
+      toggleImages[currentIndex].classList.add("active");
+
+      burgerImages.forEach((img, index) => {
+        img.addEventListener("click", () => {
+          toggleImages.forEach((toggleImg) =>
+            toggleImg.classList.remove("active")
+          );
+          toggleImages[currentIndex].classList.add("active");
+          toggleImages[currentIndex].src = burgerImages[index].src;
+          currentIndex = (currentIndex + 1) % toggleImages.length;
+        });
+      });
+
+      // Generate random stars
+      function createStars() {
+        const starsContainer = document.getElementById("stars");
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        for (let i = 0; i < 100; i++) {
+          const star = document.createElement("div");
+          star.className = "star";
+          star.style.left = `${Math.random() * windowWidth}px`;
+          star.style.top = `${Math.random() * windowHeight}px`;
+          starsContainer.appendChild(star);
+        }
+      }
+
+      // Call the createStars function when the page loads
+      window.addEventListener("load", createStars);
+    </script>
+  </body>
+</html>
